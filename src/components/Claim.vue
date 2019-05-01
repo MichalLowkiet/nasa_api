@@ -24,15 +24,28 @@ export default {
     justify-content: center;
     align-items: center;
     text-align: center;
+    color: white;
   }
 
   .claim {
     margin: 0;
     font-size: 50px;
+
+    @media (min-width: 768px){
+      font-size: 80px;
+    }
   }
 
   .subclaim {
     margin: 20px 0 0 0;
     font-size: 13px;
+    font-weight: 400;
+
+    @media (min-width: 768px){
+      font-size: 18px;
+      letter-spacing: 1px;
+      line-height: 1;
+      width: 500px;
+    }
   }
 </style>
