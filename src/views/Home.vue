@@ -1,18 +1,32 @@
 <template>
-  <div class="wrapper">
-    <div class="search">
-      <label for="search">Search</label>
-      <input
-        id="search"
-        name="search"
-        v-model="searchValue"
-        @input="handleInput"
+  <div :class="[{ flexStart: step === 1 }, 'wrapper']">
+    <transition
+      v-if="step === 1"
+      name="slide"
+    >
+      <img
+        src="../assets/logo.svg"
+        class="logo"
+      >
+    </transition>
+    <transition name="fade">
+      <HeroImage v-if="step === 0" />
+    </transition>
+    <Claim v-if="step === 0" />
+    <SearchInput
+      v-model="searchValue"
+      :dark="step === 1"
+      @input="handleInput"
+    />
+    <div
+      v-if="results && !loading && step === 1"
+      class="results"
+    >
+      <Item
+        v-for="item in results"
+        :key="item.data[0].nasa_id"
+        :item="item"
       />
-      <ul>
-        <li v-for="item in results" :key="item.data[0].nasa_id">
-          <p>{{ item.data[0].description }}</p>
-        </li>
-      </ul>
     </div>
   </div>
 </template>
@@ -20,12 +34,24 @@
 <script>
 import axios from 'axios';
 import debounce from 'lodash.debounce';
+import Claim from '@/components/Claim.vue';
+import SearchInput from '@/components/SearchInput.vue';
+import HeroImage from '@/components/HeroImage.vue';
+import Item from '@/components/Item.vue';
 
 const url = 'https://images-api.nasa.gov/search';
 export default {
-  name: 'home',
+  name: 'Home',
+  components: {
+    Claim,
+    SearchInput,
+    HeroImage,
+    Item,
+  },
   data() {
     return {
+      loading: false,
+      step: 0,
       searchValue: '',
       results: [],
     };
@@ -33,9 +59,13 @@ export default {
   methods: {
     // eslint-disable-next-line func-names
     handleInput: debounce(function () {
+      this.loading = true;
+      console.log(this.searchValue);
       axios.get(`${url}?q=${this.searchValue}&media_type=image`)
         .then((response) => {
           this.results = response.data.collection.items;
+          this.loading = false;
+          this.step = 1;
         })
         .catch((error) => {
           console.log(error);
@@ -47,27 +77,48 @@ export default {
 
 <style lang="scss" scoped>
   .wrapper {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     margin: 0;
     padding: 30px;
     width: 100%;
+    min-height: 100vh;
+
+    &.flexStart {
+      justify-content: flex-start;
+    }
   }
 
-  .search {
-    display: flex;
-    flex-direction: column;
-    width: 300px;
+  .fade-enter-active, .fade-leave-active {
+    transition: opacity .3s ease;
+  }
+  .fade-enter, .fade-leave-to {
+    opacity: 0;
+  }
 
-      label {
-        font-family: Montserrat, sans-serif;
-      }
+  .slide-enter-active, .slide-leave-active {
+    transition: margin-top .3s ease;
+  }
+  .slide-enter, .slide-leave-to {
+    margin-top: -50px;
+  }
 
-      input {
-       height: 30px;
-       border: 0;
-       border-bottom: 1px solid black;
-     }
+  .logo {
+    position: absolute;
+    top: 30px;
+  }
+
+  .results {
+    margin-top: 30px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-gap: 20px;
+
+    @media (min-width: 768px) {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
   }
 </style>
